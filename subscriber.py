@@ -6,12 +6,12 @@ def on_message(client, userdata, message):
 
 mqttBroker ="test.mosquitto.org"
 
-client = mqtt.Client("Gitpod")
-client.connect(mqttBroker) 
+client = mqtt.Client("test/AAIB")
+client.connect(mqttBroker, port=1883) 
 
 client.loop_start()
 
-client.subscribe("Random")
+client.subscribe("Number")
 client.on_message=on_message 
 
 time.sleep(30)

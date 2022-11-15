@@ -1,14 +1,13 @@
 import paho.mqtt.client as mqtt 
-from random import randrange, uniform
+from random import uniform
 import time
 
 mqttBroker ="test.mosquitto.org" 
 
-client = mqtt.Client("Random")
-client.connect(mqttBroker) 
+client = mqtt.Client("test/AAIB")
+client.connect(mqttBroker, port=1883) 
 
-while True:
-    randNumber = uniform(20.0, 21.0)
-    client.publish("Number", randNumber)
-    print("Just published " + str(randNumber) + " to topic Random")
-    time.sleep(1)
+randNumber = uniform(20.0, 21.0)
+client.publish("Number", randNumber)
+print("Just published " + str(randNumber) + " to topic Random")
+time.sleep(1)
