@@ -13,6 +13,8 @@ tasks:
         git clone https://github.com/eclipse/paho.mqtt.python.git
         cd paho.mqtt.python
         python setup.py install
+        #To instal pyAudio
+        python -m pip install pyaudio
       )
 
 github:
