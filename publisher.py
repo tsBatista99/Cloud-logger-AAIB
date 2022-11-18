@@ -9,7 +9,7 @@ client = mqtt.Client("test/AAIB")
 client.connect(mqttBroker, port=1883) 
 
 while True:
-    randNumber = uniform(20.0, 21.0)
+    randNumber = uniform(0, 10)
     client.publish("NumberAAIB", randNumber)
     print("Just published " + str(randNumber) + " to topic NumberAAIB")
     time.sleep(1)
