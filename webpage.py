@@ -1,5 +1,4 @@
 import time  # to simulate a real time data, time loop
-from streamlit_autorefresh import st_autorefresh
 
 import numpy as np  # np mean, np random
 import pandas as pd  # read csv, df manipulation
