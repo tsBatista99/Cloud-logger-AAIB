@@ -15,14 +15,14 @@ st.set_page_config(
  initial_sidebar_state="auto",
 )
 
-#read csv from a URL
+#read txt from a URL
 
 def get_data():
     with open("dados.txt","r") as f:
         last_line = f.readlines()[-1]
         return float(last_line[:-1])
 
-st.markdown("#### Random Data")
+st.markdown("<h1 style='text-align: center; color: white; padding:20px'>SoundCloud</h1>", unsafe_allow_html=True)
 
 
 
@@ -45,15 +45,33 @@ if my_file.is_file():
             
     #     st.success("Done!")
         
-    radio = st.sidebar.radio("Choose method",("Real-time Plot", "Plot","Features"))
+    radio = st.sidebar.radio("Choose method",("Real-time Plot", "Sonogram","Features"))
         
-    add_selectbox = st.sidebar.selectbox(
+    selectbox = st.sidebar.selectbox(
     "Select operation",
-    ("Email", "Home phone", "Mobile phone"))
+    ("Stream", "Open", "Save"))
     
-    
+    if selectbox == "Save":
+        if 'data' not in st.session_state:
+            st.write("Please generate data")
+        else:
+            with st.sidebar:
+                with st.spinner('Wait for it...'):
+                    time.sleep(0.5)
+                np.savetxt(r'C:/Users/tbati/Downloads/data.txt', st.session_state['data'].values, fmt='%f', delimiter='\t')
+                
+                st.success("Done!")
     
     if radio == "Real-time Plot":
+        col1, col2, col3, col4, col5,col6 = st.columns(6)
+        with col1:
+            if st.button('Start'):
+                start = True
+        with col2: 
+            if st.button('Stop'):
+                start = False
+                #del st.session_state['data']
+        
         
         # Initialization
         if 'data' not in st.session_state:
@@ -86,7 +104,7 @@ if my_file.is_file():
         if is_check:
             st.write(st.session_state['data'].T)
     
-    if radio == "Plot":
+    if radio == "Sonogram":
         width = st.sidebar.slider("plot width", 1, 20, 15)
         height = st.sidebar.slider("plot height", 1, 10, 5)
         
