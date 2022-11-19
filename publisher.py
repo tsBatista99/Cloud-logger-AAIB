@@ -12,4 +12,4 @@ while True:
     randNumber = uniform(0, 10)
     client.publish("NumberAAIB", randNumber)
     print("Just published " + str(randNumber) + " to topic NumberAAIB")
-    time.sleep(1)
+    time.sleep(0.1)

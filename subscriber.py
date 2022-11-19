@@ -9,7 +9,7 @@ def on_message(client, userdata, message):
         with open('dados.txt', 'a', encoding='UTF8') as f:
             # Append text at the end of file
             f.write(data + "\n")
-        time.sleep(1) #colocar aqui a freq de aquisição
+        time.sleep(0.1) #colocar aqui a freq de aquisição
 
 def on_connect(client, userdata, flags, rc):
 
@@ -41,7 +41,7 @@ client.subscribe("NumberAAIB")
 client.on_message=on_message 
  
 
-time.sleep(30) #substituir por 10 minutos de aquisição
+time.sleep(100) #substituir por 10 minutos de aquisição
 client.loop_stop()
 disconnect()
 

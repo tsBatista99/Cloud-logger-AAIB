@@ -7,6 +7,7 @@ import streamlit as st  # 🎈 data web app development
 import matplotlib.pyplot as plt
 from pathlib import Path
 
+
     
 
 st.set_page_config(
@@ -15,28 +16,21 @@ st.set_page_config(
  initial_sidebar_state="auto",
 )
 
-start = st.sidebar.checkbox("Update")
-
-if start:
-    st_autorefresh(interval=1000, limit=100, key="fizzbuzzcounter")
-
-dataset_url = "dados.txt"
-
 #read csv from a URL
 
-def get_data() -> pd.DataFrame:
-    return pd.read_csv(dataset_url,names=["Data"])
+def get_data():
+    with open("dados.txt","r") as f:
+        last_line = f.readlines()[-1]
+        return float(last_line[:-1])
 
 st.markdown("#### Random Data")
 
 
 
-df = []
-
-my_file = Path(dataset_url)
+my_file = Path("dados.txt")
 if my_file.is_file():
     # file exists
-    df=get_data()
+
     
     # with st.sidebar:
     #     st.write("DATA LOADER")
@@ -52,32 +46,72 @@ if my_file.is_file():
             
     #     st.success("Done!")
         
-    add_radio = st.sidebar.radio("Choose method",("Fourrier", "Plot"))
+    radio = st.sidebar.radio("Choose method",("Real-time Plot", "Plot","Features"))
         
     add_selectbox = st.sidebar.selectbox(
     "Select operation",
     ("Email", "Home phone", "Mobile phone"))
     
-    width = st.sidebar.slider("plot width", 1, 20, 15)
-    height = st.sidebar.slider("plot height", 1, 10, 5)
+    
+    
+    if radio == "Real-time Plot":
         
-    fig, ax = plt.subplots(figsize=(width, height)) 
-    plt.subplots(figsize=(width, height)) 
-    
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Data")
-    
-    ax.plot(df)
-    
-    plt.show()
-    
-    st.pyplot(fig)   
-    
-    
-    is_check = st.checkbox("Display Data")
-    if is_check:
-        st.write(df.T)
+        # Initialization
+        if 'data' not in st.session_state:
+                
+            seconds = 0
         
+            df = pd.DataFrame({"data": []})
+            
+            plot = st.line_chart(data=None,width=15,height=5)
+               
+            for seconds in range(50):
+                point = pd.DataFrame({"data": [get_data()]})
+                
+                plot.add_rows(point)
+                
+                df = df.append(point,ignore_index = True)
+                
+                time.sleep(0.1)
+                seconds += 0.1
+        
+            st.session_state['data'] = df
+            
+        else:
+            
+            st.line_chart(st.session_state['data'])
+            
+
+        
+        is_check = st.checkbox("Display Data")
+        if is_check:
+            st.write(st.session_state['data'].T)
+    
+    if radio == "Plot":
+        width = st.sidebar.slider("plot width", 1, 20, 15)
+        height = st.sidebar.slider("plot height", 1, 10, 5)
+        
+        fig, ax = plt.subplots(figsize=(width, height)) 
+        plt.subplots(figsize=(width, height)) 
+        
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Data")
+        
+        ax.plot(st.session_state['data'])
+        
+        plt.show()
+        
+        st.pyplot(fig) 
+    
+        is_check = st.checkbox("Display Data")
+        if is_check:
+            st.write(st.session_state['data'].T)
+    
+    if radio == "Fourrier":
+        st.write("Hello")
+        
+        
+    
 else:
     st.write("Please generate a new file")
 
