@@ -10,10 +10,12 @@ from pathlib import Path
     
 
 st.set_page_config(
- page_title='Random Data',
+ page_title='SoundCloud',
  layout="centered",
  initial_sidebar_state="auto",
 )
+
+
 
 #read txt from a URL
 
@@ -25,25 +27,42 @@ def get_data():
 st.markdown("<h1 style='text-align: center; color: white; padding:20px'>SoundCloud</h1>", unsafe_allow_html=True)
 
 
+      
+
+with st.sidebar:
+    st.markdown("<h1 style='text-align: center; color: white; padding:10px'>Sidebar</h1>", unsafe_allow_html=True)
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        if st.button('Start'):
+            st.session_state["start"] = True
+
+
+
 
 my_file = Path("dados.txt")
-if my_file.is_file():
+if my_file.is_file() and 'start' in st.session_state:
     # file exists
+   
+    with st.sidebar:
 
-    
-    # with st.sidebar:
-    #     st.write("DATA LOADER")
+        col1, col2, col3, col4 = st.columns(4)
         
-    #     my_bar = st.progress(0)
+        with col1: 
+            if st.button('Stop'):
+                st.session_state["start"] = False
+           
+        with col4: 
+            if st.button('RESET'):
+                del st.session_state["start"]
+                del st.session_state['data']
         
-    #     for percent_complete in range(100):
-    #         time.sleep(0.01)
-    #         my_bar.progress(percent_complete + 1)
-            
-    #     with st.spinner('Wait for it...'):
-    #         time.sleep(1)
-            
-    #     st.success("Done!")
+        with st.sidebar:
+            if 'start' in st.session_state and st.session_state["start"] == True:
+                st.success("Running")
+            else:
+                st.error("Stopped")
         
     radio = st.sidebar.radio("Choose method",("Real-time Plot", "Sonogram","Features"))
         
@@ -53,7 +72,7 @@ if my_file.is_file():
     
     if selectbox == "Save":
         if 'data' not in st.session_state:
-            st.write("Please generate data")
+            st.title("Please generate data")
         else:
             with st.sidebar:
                 with st.spinner('Wait for it...'):
@@ -62,19 +81,10 @@ if my_file.is_file():
                 
                 st.success("Done!")
     
-    if radio == "Real-time Plot":
-        col1, col2, col3, col4, col5,col6 = st.columns(6)
-        with col1:
-            if st.button('Start'):
-                start = True
-        with col2: 
-            if st.button('Stop'):
-                start = False
-                #del st.session_state['data']
-        
+    if radio == "Real-time Plot" and 'start' in st.session_state:
         
         # Initialization
-        if 'data' not in st.session_state:
+        if 'data' not in st.session_state and st.session_state["start"] == True:
                 
             seconds = 0
         
@@ -82,7 +92,7 @@ if my_file.is_file():
             
             plot = st.line_chart(data=None,width=15,height=5)
                
-            for seconds in range(50):
+            while st.session_state["start"] == True:
                 point = pd.DataFrame({"data": [get_data()]})
                 
                 plot.add_rows(point)
@@ -92,7 +102,7 @@ if my_file.is_file():
                 time.sleep(0.1)
                 seconds += 0.1
         
-            st.session_state['data'] = df
+                st.session_state['data'] = df
             
         else:
             
@@ -103,10 +113,11 @@ if my_file.is_file():
         is_check = st.checkbox("Display Data")
         if is_check:
             st.write(st.session_state['data'].T)
+            
     
-    if radio == "Sonogram":
-        width = st.sidebar.slider("plot width", 1, 20, 15)
-        height = st.sidebar.slider("plot height", 1, 10, 5)
+    if radio == "Sonogram" and 'start' in st.session_state and 'data' in st.session_state:
+        width = st.sidebar.slider("Plot width", 1, 20, 15)
+        height = st.sidebar.slider("Plot height", 1, 10, 5)
         
         fig, ax = plt.subplots(figsize=(width, height)) 
         plt.subplots(figsize=(width, height)) 
@@ -124,11 +135,13 @@ if my_file.is_file():
         if is_check:
             st.write(st.session_state['data'].T)
     
-    if radio == "Fourrier":
+    if radio == "Features" and 'start' in st.session_state and 'data' in st.session_state:
         st.write("Hello")
         
         
     
 else:
-    st.write("Please generate a new file")
+    with st.container():
+        st.info("Please generate a new file")
+ 
 
