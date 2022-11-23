@@ -5,16 +5,45 @@ import pandas as pd  # read csv, df manipulation
 import streamlit as st  # 🎈 data web app development
 import matplotlib.pyplot as plt
 from pathlib import Path
+from scipy.fft import rfft, rfftfreq
+import math
 
+import paho.mqtt.client as mqtt 
+#import librosa 
+from scipy.signal import butter, lfilter
 
-    
+def butter_bandpass(lowcut, highcut, fs, order=5):
+    return butter(order, [lowcut, highcut], fs=fs, btype='band')
+
+def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
+    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
+
+def plot_senogram(data, lowcut, highcut):
+    st.write('Sonogram plot')
+    ax.set_xlabel("Time /s")
+    ax.set_ylabel("Data")
+    fs = 44100
+    y = butter_bandpass_filter(data, lowcut, highcut, fs)
+    ax.plot(y)
+    plt.show()
+    st.pyplot(fig) 
 
 st.set_page_config(
  page_title='SoundCloud',
  layout="centered",
+ page_icon='icon.png',
  initial_sidebar_state="auto",
 )
 
+mqttBroker ="test.mosquitto.org" 
+client = mqtt.Client("soundcloud")
+client.connect(mqttBroker, port=1883) 
+
+def publish_status():
+    client.publish("Status", st.session_state["start"])
+ 
 
 
 #read txt from a URL
@@ -24,19 +53,22 @@ def get_data():
         last_line = f.readlines()[-1]
         return float(last_line[:-1])
 
+
+
 st.markdown("<h1 style='text-align: center; color: white; padding:20px'>SoundCloud</h1>", unsafe_allow_html=True)
 
-
+st.write('___')
       
 
 with st.sidebar:
-    st.markdown("<h1 style='text-align: center; color: white; padding:10px'>Sidebar</h1>", unsafe_allow_html=True)
+    st.write('___')
     
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         if st.button('Start'):
             st.session_state["start"] = True
+            publish_status()
 
 
 
@@ -52,11 +84,14 @@ if my_file.is_file() and 'start' in st.session_state:
         with col1: 
             if st.button('Stop'):
                 st.session_state["start"] = False
+                publish_status()
+             
            
         with col4: 
             if st.button('RESET'):
                 del st.session_state["start"]
                 del st.session_state['data']
+   
         
         with st.sidebar:
             if 'start' in st.session_state and st.session_state["start"] == True:
@@ -136,12 +171,66 @@ if my_file.is_file() and 'start' in st.session_state:
             st.write(st.session_state['data'].T)
     
     if radio == "Features" and 'start' in st.session_state and 'data' in st.session_state:
-        st.write("Hello")
+        my_expander = st.expander('Band Pass filter')
+        my_expander.write('Choose low-cut and high-cut frequencies:')
+        lowcut = my_expander.slider("Low-cut frequency", 0.01, 20000.0, 0.01)
+        highcut = my_expander.slider("High-cut frequency", 0.01, 20000.0, 20000.0)
+        
+       # add_selectbox = st.selectbox(
+        #    "Select Domain",
+         #   ("Sonogram", "Time Domain", "Frequency domain"))
+         
+        #d = pd.DataFrame({"sonogram": [], "timedomain":[], "frequencydomain": []})
+        show = st.multiselect("Select plot", ['Sonogram','Time Domain','Frequency Domain'], ['Sonogram'])
+        
+        width = st.sidebar.slider("Plot width", 1, 20, 15)
+        height = st.sidebar.slider("Plot height", 1, 10, 5)
+        
+  
+        fig, ax = plt.subplots(figsize=(width, height)) 
+        plt.subplots(figsize=(width, height)) 
+        
+        if len(show) == 1:
+            if show[0] == 'Sonogram':
+                 plot_senogram(st.session_state['data'], lowcut, highcut)
+            
+            if show[0] == 'Time Domain':
+                st.write('Time Domain plot')
+                
+            if show[0] == 'Frequency Domain':
+                st.write('Frequency Domain plot')
+        
+        
+        if len(show) == 2:
+            if 'Sonogram' in show and 'Time Domain' in show:
+                 plot_senogram(st.session_state['data'], lowcut, highcut)
+                 
+                 st.write('Time Domain plot')
+                 
+            if 'Sonogram' in show and 'Frequency Domain' in show:
+                plot_senogram(st.session_state['data'], lowcut, highcut)
+                  
+                st.write('Frequency Domain plot')     
+                
+            if 'Time Domain' in show and 'Frequency Domain' in show:
+                st.write('Time Domain plot')
+                   
+                st.write('Frequency Domain plot')     
+                 
+              
+        if len(show) == 3:
+            plot_senogram(st.session_state['data'], lowcut, highcut)
+            
+            st.write('Time Domain plot')
+             
+            st.write('Frequency Domain plot')
         
         
     
 else:
     with st.container():
-        st.info("Please generate a new file")
- 
-
+        st.info('Welcome to "SoundCloud"!')
+        st.info("Please generate a new file.")
+    with st.sidebar:
+        st.title("About")
+        st.info('This project was created as a data logger for recorded sounds that allows real-time visualization, analysis of the signal/features and to save the information to a file. All the source code can be found in https://github.com/tsBatista99/Cloud-logger-AAIB.git')
