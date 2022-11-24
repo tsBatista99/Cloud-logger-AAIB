@@ -1,57 +1,90 @@
 import paho.mqtt.client as mqtt 
 import time
 import pyaudio
+import audioop
+import threading
+
+
+broker="test.mosquitto.org"
+port=1883
 
 def on_connect(client, userdata, flags, rc):
 
     if rc == 0:
         print("Connected to broker")
-
-        global Connected                #Use global variable
-        Connected = True                #Signal connection
     else:
         print("Connection failed")
+    #print("Connected with result code: ", str(rc))
+    client.subscribe("Status")
+    print("subscribing to topic : " + "Status")
+    
     
 def disconnect():
     print("client is disconnecting..")
     client.disconnect()
 
-Connected = False   #global variable for the state of the connection
-mqttBroker ="test.mosquitto.org" 
 
+def on_message(client, userdata, message):
+    global stop_threads
+    msg = message.payload.decode("utf-8")
+    print("Data requested "+str(msg))
+    if msg == "False":
+        stop_threads = True
+        pub.join()
+        disconnect()
+    if msg == "True":
+        stop_threads = False
+        pub.start() 
+
+
+def main():
+    p = pyaudio.PyAudio()
+    
+    CHUNK = 1024
+    FORMAT = pyaudio.paInt16 #paInt16 is a signed 16-bit binary string
+    CHANNELS = 2
+    RATE = 44100
+    #RECORD_SECONDS = 20 #Tempo de aquisição
+
+    stream = p.open(format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    input=True,
+                    frames_per_buffer=CHUNK)
+    
+    print("* recording")
+    
+    while True:
+        global stop_threads
+        if stop_threads:
+            break
+        #for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+        data = stream.read(CHUNK)
+        rms = audioop.rms(data, 2) #16bits has width 2
+        client.publish("AAIBsom", rms)
+        print("Just published " + str(rms) + " to topic AAIBsom")
+        time.sleep(1/RATE)
+        
+    print("* done recording")
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+        
+
+### MQTT ###
 client = mqtt.Client("test/AAIB")
-client.connect(mqttBroker, port=1883) 
+client.connect(broker, port) 
 client.on_connect= on_connect
 
 
-CHUNK = 1024
-FORMAT = pyaudio.paInt16
-CHANNELS = 2
-RATE = 44100
-RECORD_SECONDS = 20 #Tempo de aquisição
+def subscribing():
+    client.on_message = on_message
+    client.loop_forever()
 
 
-p = pyaudio.PyAudio()
+sub=threading.Thread(target=subscribing)
+pub=threading.Thread(target=main)
 
-stream = p.open(format=FORMAT,
-                channels=CHANNELS,
-                rate=RATE,
-                input=True,
-                frames_per_buffer=CHUNK)
-
-print("* recording")
-
-frames = []
-
-for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-    data = stream.read(CHUNK)
-    client.publish("AAIB", data)
-    #print("Just published " + str(data) + " to topic AAIB")
-    time.sleep(1/RATE)
-
-print("* done recording")
-
-stream.stop_stream()
-stream.close()
-p.terminate()
-disconnect()
+### Start MAIN ###
+stop_threads = False
+sub.start()
