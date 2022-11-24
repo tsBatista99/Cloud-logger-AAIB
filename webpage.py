@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from scipy.fft import rfft, rfftfreq
 import math
+import sklearn
+import librosa
+import librosa.display
 
 import paho.mqtt.client as mqtt 
 #import librosa 
@@ -49,7 +52,7 @@ def publish_status():
 #read txt from a URL
 
 def get_data():
-    with open("dados.txt","r") as f:
+    with open("dadosSOM.txt","r") as f:
         last_line = f.readlines()[-1]
         return float(last_line[:-1])
 
@@ -82,15 +85,16 @@ if my_file.is_file() and 'start' in st.session_state:
         col1, col2, col3, col4 = st.columns(4)
         
         with col1: 
-            if st.button('Stop'):
+            stop = st.button('Stop')
+            if stop:
                 st.session_state["start"] = False
                 publish_status()
+                st.session_state["cancel"] = True
              
            
         with col4: 
-            if st.button('RESET'):
-                del st.session_state["start"]
-                del st.session_state['data']
+            reset = st.button('RESET')
+            st.session_state["cancel"] = False
    
         
         with st.sidebar:
@@ -99,7 +103,17 @@ if my_file.is_file() and 'start' in st.session_state:
             else:
                 st.error("Stopped")
         
-    radio = st.sidebar.radio("Choose method",("Real-time Plot", "Sonogram","Features"))
+    
+    if reset == True:
+        if 'cancel' in st.session_state and st.session_state["cancel"] == False:
+            del st.session_state["start"]
+            del st.session_state['data']
+            del st.session_state["cancel"]
+        st.warning('The data of this session will be deleted. Press RESET again to continue.', icon="⚠️")
+        
+        
+    
+    radio = st.sidebar.radio("Choose method",("Real-time Plot", "Sonogram","Spectrogram","Features"))
         
     selectbox = st.sidebar.selectbox(
     "Select operation",
@@ -144,10 +158,23 @@ if my_file.is_file() and 'start' in st.session_state:
             st.line_chart(st.session_state['data'])
             
 
-        
+    
         is_check = st.checkbox("Display Data")
         if is_check:
             st.write(st.session_state['data'].T)
+            
+            kpi1, kpi2, kpi3 = st.columns(3)
+
+            # fill in those three columns with respective metrics or KPIs
+            kpi1.metric(
+                label="Maximum Power",
+                value=round(st.session_state['data'].max())
+            )
+            
+            kpi2.metric(
+                label="Average Power",
+                value=round(st.session_state['data'].mean())
+            )
             
     
     if radio == "Sonogram" and 'start' in st.session_state and 'data' in st.session_state:
@@ -170,67 +197,82 @@ if my_file.is_file() and 'start' in st.session_state:
         if is_check:
             st.write(st.session_state['data'].T)
     
-    if radio == "Features" and 'start' in st.session_state and 'data' in st.session_state:
-        my_expander = st.expander('Band Pass filter')
-        my_expander.write('Choose low-cut and high-cut frequencies:')
-        lowcut = my_expander.slider("Low-cut frequency", 0.01, 20000.0, 0.01)
-        highcut = my_expander.slider("High-cut frequency", 0.01, 20000.0, 20000.0)
+
+    if radio == "Features" and 'start' in st.session_state:
+        y = st.session_state['data']['data'].to_numpy()
+        fs = 44100
         
-       # add_selectbox = st.selectbox(
-        #    "Select Domain",
-         #   ("Sonogram", "Time Domain", "Frequency domain"))
-         
-        #d = pd.DataFrame({"sonogram": [], "timedomain":[], "frequencydomain": []})
-        show = st.multiselect("Select plot", ['Sonogram','Time Domain','Frequency Domain'], ['Sonogram'])
+        st.header("Feature extraction")
+        st.subheader("Time domain")
+        #amplitude envelope
+        y_harmonic, y_percussive = librosa.effects.hpss(y)
+        st.write("Componente harmónica")
+        fig, ax = plt.subplots(figsize=(14, 4)) 
+        ax.set_xlabel("Time /s")
+        ax.set_ylabel("Amplitude")
+        ax.plot(y_harmonic)
+        st.pyplot(fig)
         
-        width = st.sidebar.slider("Plot width", 1, 20, 15)
-        height = st.sidebar.slider("Plot height", 1, 10, 5)
+        st.write("Componente Percurssiva")
+        fig, ax = plt.subplots(figsize=(14, 4)) 
+        ax.set_xlabel("Time /s")
+        ax.set_ylabel("Amplitude")
+        ax.plot(y_percussive)
+        st.pyplot(fig)
+        #root mean square energy
         
-  
-        fig, ax = plt.subplots(figsize=(width, height)) 
-        plt.subplots(figsize=(width, height)) 
+        #zero-crossing rate
         
-        if len(show) == 1:
-            if show[0] == 'Sonogram':
-                 plot_senogram(st.session_state['data'], lowcut, highcut)
-            
-            if show[0] == 'Time Domain':
-                st.write('Time Domain plot')
-                
-            if show[0] == 'Frequency Domain':
-                st.write('Frequency Domain plot')
-        
-        
-        if len(show) == 2:
-            if 'Sonogram' in show and 'Time Domain' in show:
-                 plot_senogram(st.session_state['data'], lowcut, highcut)
-                 
-                 st.write('Time Domain plot')
-                 
-            if 'Sonogram' in show and 'Frequency Domain' in show:
-                plot_senogram(st.session_state['data'], lowcut, highcut)
-                  
-                st.write('Frequency Domain plot')     
-                
-            if 'Time Domain' in show and 'Frequency Domain' in show:
-                st.write('Time Domain plot')
-                   
-                st.write('Frequency Domain plot')     
-                 
-              
-        if len(show) == 3:
-            plot_senogram(st.session_state['data'], lowcut, highcut)
-            
-            st.write('Time Domain plot')
-             
-            st.write('Frequency Domain plot')
+
+
+        spectral_centroids = librosa.feature.spectral_centroid(y, sr=fs)[0]
+      #  spectral_centroids.shape
+     #   (775,)
+        # Computing the time variable for visualization
+        fig, ax = plt.subplots(figsize=(14, 4)) 
+        frames = range(len(spectral_centroids))
+        t = librosa.frames_to_time(frames)
+        # Normalising the spectral centroid for visualisation
+        def normalize(y, axis=0):
+            return sklearn.preprocessing.minmax_scale(y, axis=axis)
+        #Plotting the Spectral Centroid along the waveform
+        librosa.display.waveshow(y, sr=fs, alpha=0.4)
+        ax.plot(t, normalize(spectral_centroids), color='b')
+        st.pyplot(fig)
         
         
+        st.subheader('Frequency domain')
+        
+        st.subheader('Time-frequency domain')
+
+        #spectrogram
+        st.write("Espetrograma")
+        X = librosa.stft(y)
+        Xdb = librosa.amplitude_to_db(abs(X))
+        fig, ax = plt.subplots(figsize=(14, 5))
+        img = librosa.display.specshow(Xdb, sr=fs, x_axis='time', y_axis='hz')
+        plt.colorbar(img, ax= ax)
+        st.pyplot(fig)
+        
+        #Spectral centroid
+        st.write("Spectral Centroid")
+        fig2, ax = plt.subplots(figsize=(14,5)) 
+        img = librosa.display.specshow(Xdb, sr=fs, x_axis='time', y_axis='log', ax=ax)
+        plt.colorbar(img, ax = ax)
+        st.pyplot(fig2)
+    
+        #chromagram
+        chroma = librosa.feature.chroma_cqt(y=y, sr=fs)
+        fig, ax = plt.subplots()
+        img = librosa.display.specshow(chroma, y_axis='chroma', x_axis='time', ax=ax)
+        ax.set(title='Chromagram demonstration')
+        fig.colorbar(img, ax=ax)
+        st.pyplot(fig)
     
 else:
     with st.container():
         st.info('Welcome to "SoundCloud"!')
-        st.info("Please generate a new file.")
+        st.info("Click Start to generate a new file.")
     with st.sidebar:
         st.title("About")
         st.info('This project was created as a data logger for recorded sounds that allows real-time visualization, analysis of the signal/features and to save the information to a file. All the source code can be found in https://github.com/tsBatista99/Cloud-logger-AAIB.git')
