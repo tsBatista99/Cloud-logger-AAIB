@@ -1,6 +1,7 @@
 tasks:
   - init: |
       (
+        pip3 install --upgrade pip
         #To install streamlit
         sudo pip3 install streamlit
         #To install MQTT service
