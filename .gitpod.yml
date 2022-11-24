@@ -24,12 +24,7 @@ tasks:
         sudo pip install --upgrade librosa
         sudo pip install --upgrade matplotlib
       )
-  - command: |
-      (
-        streamlit run webpage.py
-        python subscriberSOM.py
-        python publisherSOM.py
-      )
+
 
 github:
   prebuilds:
