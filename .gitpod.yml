@@ -26,6 +26,16 @@ tasks:
         sudo pip install --upgrade matplotlib
       )
 
+# List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
+ports:
+  #default port?
+  - port: 1883
+    onOpen: ignore
+  - port: 8501
+    name: web App
+    description: Computer Microphone data logger
+    onOpen: open-browser
+    visibility: public
 
 github:
   prebuilds:
