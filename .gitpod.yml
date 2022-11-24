@@ -25,6 +25,8 @@ tasks:
         sudo pip install --upgrade matplotlib
       )
   command: streamlit run webpage.py
+  command: python subscriberSOM.py
+  command: python publisherSOM.py
 
 github:
   prebuilds:
