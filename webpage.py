@@ -160,7 +160,7 @@ if my_file.is_file() and 'start' in st.session_state:
     
     if selectbox == "Save":
         if 'data' not in st.session_state:
-            st.title("Please generate data")
+            st.sidebar.error("Please generate data")
         else:
             csv = st.session_state['data'].to_csv(index=False).encode('utf-8')
             save = st.download_button( label="Download", data = csv, file_name="dataSOM.csv" )
@@ -168,8 +168,8 @@ if my_file.is_file() and 'start' in st.session_state:
             with st.sidebar:
                 with st.spinner('Wait for it...'):
                     time.sleep(0.5)
-       
-                st.success("Done!")
+                
+                save = st.download_button( label="Download", data = csv, file_name="dataSOM.csv" )
     
     if radio == "Real-time Plot" and 'start' in st.session_state:
         
