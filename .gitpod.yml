@@ -48,3 +48,7 @@ ports:
     onOpen: open-browser
     visibility: public
 
+github:
+  prebuilds:
+    auto:
+    - false
