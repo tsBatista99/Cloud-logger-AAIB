@@ -43,7 +43,7 @@ ports:
   - port: 1883
     onOpen: ignore
   - port: 8501
-    name: web App
+    name: web page
     description: Computer Microphone data logger
     onOpen: open-browser
     visibility: public
