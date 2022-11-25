@@ -47,7 +47,7 @@ client = mqtt.Client("soundcloud")
 client.connect(mqttBroker, port=1883) 
 
 def publish_status():
-    client.publish("StatusWeb", st.session_state["start"])
+    client.publish("StatusWebAAIB", st.session_state["start"])
  
 
 
