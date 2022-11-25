@@ -54,7 +54,7 @@ def publish_status():
 #read txt from a URL
 
 def get_data():
-    with open("dadosSOM.txt","r") as f:
+    with open("/workspace/Cloud-logger-AAIB/dadosSOM.txt","r") as f:
         last_line = f.readlines()[-1]
         return float(last_line[:-1])
 
@@ -78,7 +78,7 @@ with st.sidebar:
 
 
 
-my_file = Path("dadosSOM.txt")
+my_file = Path("/workspace/Cloud-logger-AAIB/dadosSOM.txt")
 
 if my_file.is_file() and 'start' in st.session_state:
     # file exists

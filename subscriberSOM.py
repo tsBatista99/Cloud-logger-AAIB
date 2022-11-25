@@ -36,7 +36,7 @@ def disconnect():
 def on_message(client, userdata, message):
     data = message.payload.decode('utf-8')
     print("received message: " ,str(data))
-    with open('dadosSOM.txt', 'a', encoding='UTF8') as f:
+    with open('/workspace/Cloud-logger-AAIB/dadosSOM.txt', 'a', encoding='UTF8') as f:
         # Append text at the end of file
         f.write(data + "\n")
     time.sleep(1/RATE) #colocar aqui a freq de aquisição
