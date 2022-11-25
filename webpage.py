@@ -15,6 +15,8 @@ import paho.mqtt.client as mqtt
 #import librosa 
 from scipy.signal import butter, lfilter
 
+RATE = 10
+
 def butter_bandpass(lowcut, highcut, fs, order=5):
     return butter(order, [lowcut, highcut], fs=fs, btype='band')
 
@@ -76,7 +78,8 @@ with st.sidebar:
 
 
 
-my_file = Path("dados.txt")
+my_file = Path("dadosSOM.txt")
+
 if my_file.is_file() and 'start' in st.session_state:
     # file exists
    
@@ -126,7 +129,7 @@ if my_file.is_file() and 'start' in st.session_state:
             with st.sidebar:
                 with st.spinner('Wait for it...'):
                     time.sleep(0.5)
-                np.savetxt(r'C:/Users/tbati/Downloads/data.txt', st.session_state['data'].values, fmt='%f', delimiter='\t')
+                np.savetxt(r'https://github.com/tsBatista99/Cloud-logger-AAIB/blob/main/dataSOM.txt', st.session_state['data'].values, fmt='%f', delimiter='\t')
                 
                 st.success("Done!")
     
@@ -148,8 +151,8 @@ if my_file.is_file() and 'start' in st.session_state:
                 
                 df = df.append(point,ignore_index = True)
                 
-                time.sleep(0.1)
-                seconds += 0.1
+                time.sleep(1/RATE)
+                seconds += 1/RATE
         
                 st.session_state['data'] = df
             
