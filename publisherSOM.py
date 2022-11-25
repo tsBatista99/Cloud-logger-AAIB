@@ -15,8 +15,8 @@ def on_connect(client, userdata, flags, rc):
     else:
         print("Connection failed")
     #print("Connected with result code: ", str(rc))
-    client.subscribe("Status")
-    print("subscribing to topic : " + "Status")
+    client.subscribe("StatusWeb")
+    print("subscribing to topic : " + "StatusWeb")
     
     
 def disconnect():
@@ -61,8 +61,8 @@ def main():
         #for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
         data = stream.read(CHUNK)
         rms = audioop.rms(data, 2) #16bits has width 2
-        client.publish("AAIBsom", rms)
-        print("Just published " + str(rms) + " to topic AAIBsom")
+        client.publish("SoundSig", rms)
+        print("Just published " + str(rms) + " to topic SoundSig")
         time.sleep(1/RATE)
         
     print("* done recording")
@@ -72,7 +72,7 @@ def main():
         
 
 ### MQTT ###
-client = mqtt.Client("test/AAIB")
+client = mqtt.Client("device")
 client.connect(broker, port) 
 client.on_connect= on_connect
 

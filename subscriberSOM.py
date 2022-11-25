@@ -15,7 +15,7 @@ RATE = 44100
 
 broker="test.mosquitto.org"
 port=1883
-topic = "AAIBsom"
+topic = "SoundSig"
 
 
 def on_connect(client, userdata, flags, rc):
