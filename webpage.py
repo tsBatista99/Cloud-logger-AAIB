@@ -5,35 +5,71 @@ import pandas as pd  # read csv, df manipulation
 import streamlit as st  # 🎈 data web app development
 import matplotlib.pyplot as plt
 from pathlib import Path
-from scipy.fft import rfft, rfftfreq
+from scipy.signal import butter, lfilter
 import math
 import sklearn
-import librosa
-import librosa.display
+from numpy.fft import fft
 
 import paho.mqtt.client as mqtt 
 #import librosa 
-from scipy.signal import butter, lfilter
+import librosa
+import librosa.display
 
 RATE = 10
+fs = 44100
 
-def butter_bandpass(lowcut, highcut, fs, order=5):
-    return butter(order, [lowcut, highcut], fs=fs, btype='band')
 
 def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
-    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
+    b, a = butter(order, [lowcut,highcut], fs=fs, btype='band')
     y = lfilter(b, a, data)
     return y
 
-def plot_senogram(data, lowcut, highcut):
+
+def plot_senogram(y):
+    fig, ax = plt.subplots(figsize=(14, 4)) 
     st.write('Sonogram plot')
     ax.set_xlabel("Time /s")
     ax.set_ylabel("Data")
-    fs = 44100
-    y = butter_bandpass_filter(data, lowcut, highcut, fs)
+    ax.set_title("Sonogram plot", fontsize = 15)
     ax.plot(y)
     plt.show()
     st.pyplot(fig) 
+
+
+def plot_fft(y, fs):
+    st.write('Frequency Domain plot')
+    #plot FFT
+    X = fft(y)
+    N = len(X)
+    n = np.arange(N)
+    T = N/fs
+    freq = n/T 
+    # Get the one-sided specturm
+    n_oneside = N//2
+    # get the one side frequency
+    f_oneside = freq[:n_oneside]
+    
+    fig, ax = plt.subplots(figsize=(14, 4)) 
+    plt.plot(f_oneside, np.abs(X[:n_oneside]), 'b')
+    plt.xlabel('Freq /Hz')
+    plt.ylabel('FFT Amplitude')
+    ax.set_title("Fourier transform plot", fontsize = 15)
+    plt.show()
+    st.pyplot(fig)
+    
+def plot_spetrogram(y,fs):
+    st.write('Spectrogram plot')
+    fig, ax = plt.subplots(1, figsize=(14, 8))
+    fig.tight_layout(pad=10.0)
+    ax.specgram(y, Fs=fs)
+    ax.set_xlabel(xlabel='Time /sec')
+    ax.set_ylabel(ylabel='Frequency Amplitude / rad/s')
+    helper = [0, 2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000]
+    spec_yticks = [6.28 * i for i in helper]
+    ax.set_yticks(helper)
+    ax.set_yticklabels(spec_yticks)
+    ax.set_title("Signal Spectrogram", fontsize = 15)
+    st.pyplot(fig)
 
 st.set_page_config(
  page_title='SoundCloud',
@@ -112,7 +148,7 @@ if my_file.is_file() and 'start' in st.session_state:
             del st.session_state["start"]
             del st.session_state['data']
             del st.session_state["cancel"]
-        st.warning('The data of this session will be deleted. Press RESET again to continue.', icon="⚠️")
+        st.warning('The data of this session was deleted. Press RESET again to continue.', icon="⚠️")
         
         
     
@@ -126,11 +162,13 @@ if my_file.is_file() and 'start' in st.session_state:
         if 'data' not in st.session_state:
             st.title("Please generate data")
         else:
+            csv = st.session_state['data'].to_csv(index=False).encode('utf-8')
+            save = st.download_button( label="Download", data = csv, file_name="dataSOM.csv" )
+            
             with st.sidebar:
                 with st.spinner('Wait for it...'):
                     time.sleep(0.5)
-                np.savetxt(r'https://github.com/tsBatista99/Cloud-logger-AAIB/blob/main/dataSOM.txt', st.session_state['data'].values, fmt='%f', delimiter='\t')
-                
+       
                 st.success("Done!")
     
     if radio == "Real-time Plot" and 'start' in st.session_state:
@@ -226,22 +264,6 @@ if my_file.is_file() and 'start' in st.session_state:
         
         #zero-crossing rate
         
-
-
-        spectral_centroids = librosa.feature.spectral_centroid(y, sr=fs)[0]
-      #  spectral_centroids.shape
-     #   (775,)
-        # Computing the time variable for visualization
-        fig, ax = plt.subplots(figsize=(14, 4)) 
-        frames = range(len(spectral_centroids))
-        t = librosa.frames_to_time(frames)
-        # Normalising the spectral centroid for visualisation
-        def normalize(y, axis=0):
-            return sklearn.preprocessing.minmax_scale(y, axis=axis)
-        #Plotting the Spectral Centroid along the waveform
-        librosa.display.waveshow(y, sr=fs, alpha=0.4)
-        ax.plot(t, normalize(spectral_centroids), color='b')
-        st.pyplot(fig)
         
         
         st.subheader('Frequency domain')
@@ -259,10 +281,17 @@ if my_file.is_file() and 'start' in st.session_state:
         
         #Spectral centroid
         st.write("Spectral Centroid")
-        fig2, ax = plt.subplots(figsize=(14,5)) 
-        img = librosa.display.specshow(Xdb, sr=fs, x_axis='time', y_axis='log', ax=ax)
-        plt.colorbar(img, ax = ax)
-        st.pyplot(fig2)
+        spectral_centroids = librosa.feature.spectral_centroid(y, sr=fs)[0]
+        fig, ax = plt.subplots(figsize=(14, 4)) 
+        frames = range(len(spectral_centroids))
+        t = librosa.frames_to_time(frames)
+        # Normalising the spectral centroid for visualisation
+        def normalize(y, axis=0):
+            return sklearn.preprocessing.minmax_scale(y, axis=axis)
+        #Plotting the Spectral Centroid along the waveform
+        librosa.display.waveshow(y, sr=fs, alpha=0.4)
+        ax.plot(t, normalize(spectral_centroids), color='b')
+        st.pyplot(fig)
     
         #chromagram
         chroma = librosa.feature.chroma_cqt(y=y, sr=fs)
