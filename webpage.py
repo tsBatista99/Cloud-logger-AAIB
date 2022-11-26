@@ -90,7 +90,8 @@ def publish_status():
 #read txt from a URL
 
 def get_data():
-    with open("/workspace/Cloud-logger-AAIB/dadosSOM.txt","r") as f:
+    #with open("/workspace/Cloud-logger-AAIB/dadosSOM.txt","r") as f:
+    with open("dadosSOM.txt","r") as f:
         last_line = f.readlines()[-1]
         return float(last_line[:-1])
 
@@ -113,8 +114,8 @@ with st.sidebar:
 
 
 
-
-my_file = Path("/workspace/Cloud-logger-AAIB/dadosSOM.txt")
+#my_file = Path("/workspace/Cloud-logger-AAIB/dadosSOM.txt")
+my_file = Path("dadosSOM.txt")
 
 if my_file.is_file() and 'start' in st.session_state:
     # file exists
@@ -152,24 +153,39 @@ if my_file.is_file() and 'start' in st.session_state:
         
         
     
-    radio = st.sidebar.radio("Choose method",("Real-time Plot", "Sonogram","Spectrogram","Features"))
-        
     selectbox = st.sidebar.selectbox(
     "Select operation",
     ("Stream", "Open", "Save"))
+    
+    
+    if selectbox == "Open":
+        st.session_state["start"] = False
+        
+        uploaded_file = st.file_uploader( label="Choose a file", type = "csv", help="Click the Search file button to open the csv file")
+        if uploaded_file is not None:
+            del st.session_state['data']
+            st.session_state['data'] = pd.read_csv(uploaded_file)
+        
+
+
     
     if selectbox == "Save":
         if 'data' not in st.session_state:
             st.sidebar.error("Please generate data")
         else:
             csv = st.session_state['data'].to_csv(index=False).encode('utf-8')
-            save = st.download_button( label="Download", data = csv, file_name="dataSOM.csv" )
             
             with st.sidebar:
                 with st.spinner('Wait for it...'):
-                    time.sleep(0.5)
+                    time.sleep(1)
                 
                 save = st.download_button( label="Download", data = csv, file_name="dataSOM.csv" )
+            selectbox = "Stream"
+    
+    
+    radio = st.sidebar.radio("Choose method",("Real-time Plot", "Sonogram","Spectrogram","Features"))
+        
+    
     
     if radio == "Real-time Plot" and 'start' in st.session_state:
         
