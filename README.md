@@ -1,7 +1,7 @@
 # Cloud-logger-AAIB
 Repositório com os ficheiros referentes ao trabalho alternativo da UC AAIB (FCT-NOVA) 2022/2023.
 
-# Sobre o projeto
+## Sobre o projeto
 
 O objetivo deste trabalho passou pela criação de um sistema "data logger" de áudio proveniente do microfone do computador. Os dados adquiridos são exibidos em "real time" numa página desenvolvida em "Streamlit" sob a forma de gráficos, com a possibilidade de gravar os mesmos ou abrir os dados de uma outra sessão.
 
