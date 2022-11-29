@@ -5,7 +5,7 @@ import pandas as pd  # read csv, df manipulation
 import streamlit as st  # 🎈 data web app development
 import matplotlib.pyplot as plt
 from pathlib import Path
-from scipy.signal import butter, lfilter
+from scipy.signal import butter, lfilter, find_peaks
 import math
 import sklearn
 from numpy.fft import fft
@@ -25,7 +25,7 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
     return y
 
 
-def plot_senogram(y):
+def plot_sonogram(y):
     fig, ax = plt.subplots(figsize=(14, 4)) 
     st.write('Sonogram plot')
     ax.set_xlabel("Time /s")
@@ -72,14 +72,14 @@ def plot_spetrogram(y,fs):
     st.pyplot(fig)
 
 st.set_page_config(
- page_title='SoundCloud',
+ page_title='SonoCloud',
  layout="centered",
  page_icon='icon.png',
  initial_sidebar_state="auto",
 )
 
 mqttBroker ="test.mosquitto.org" 
-client = mqtt.Client("soundcloud")
+client = mqtt.Client("sonocloud")
 client.connect(mqttBroker, port=1883) 
 
 def publish_status():
@@ -133,7 +133,7 @@ if my_file.is_file() and 'start' in st.session_state:
              
            
         with col4: 
-            reset = st.button('RESET')
+            reset = st.button('Reset')
             st.session_state["cancel"] = False
    
         
@@ -142,16 +142,8 @@ if my_file.is_file() and 'start' in st.session_state:
                 st.success("Running")
             else:
                 st.error("Stopped")
-        
     
-    if reset == True:
-        if 'cancel' in st.session_state and st.session_state["cancel"] == False:
-            del st.session_state["start"]
-            del st.session_state['data']
-            del st.session_state["cancel"]
-        st.warning('The data of this session was deleted. Press RESET again to continue.', icon="⚠️")
-        
-        
+            
     
     selectbox = st.sidebar.selectbox(
     "Select operation",
@@ -163,9 +155,7 @@ if my_file.is_file() and 'start' in st.session_state:
         
         uploaded_file = st.file_uploader( label="Choose a file", type = "csv", help="Click the Search file button to open the csv file")
         if uploaded_file is not None:
-            del st.session_state['data']
             st.session_state['data'] = pd.read_csv(uploaded_file)
-        
 
 
     
@@ -181,6 +171,14 @@ if my_file.is_file() and 'start' in st.session_state:
                 
                 save = st.download_button( label="Download", data = csv, file_name="dataSOM.csv" )
             selectbox = "Stream"
+    
+    
+    if reset == True:
+        if 'cancel' in st.session_state and st.session_state["cancel"] == False:
+            del st.session_state["start"]
+            del st.session_state['data']
+            del st.session_state["cancel"]
+        st.warning('The data of this session was deleted. Press RESET again to continue.', icon="⚠️")
     
     
     radio = st.sidebar.radio("Choose method",("Real-time Plot", "Sonogram","Spectrogram","Features"))
@@ -253,39 +251,10 @@ if my_file.is_file() and 'start' in st.session_state:
         is_check = st.checkbox("Display Data")
         if is_check:
             st.write(st.session_state['data'].T)
+            
     
-
-    if radio == "Features" and 'start' in st.session_state:
+    if radio == "Spectrogram" and 'start' in st.session_state and 'data' in st.session_state:
         y = st.session_state['data']['data'].to_numpy()
-        fs = 44100
-        
-        st.header("Feature extraction")
-        st.subheader("Time domain")
-        #amplitude envelope
-        y_harmonic, y_percussive = librosa.effects.hpss(y)
-        st.write("Componente harmónica")
-        fig, ax = plt.subplots(figsize=(14, 4)) 
-        ax.set_xlabel("Time /s")
-        ax.set_ylabel("Amplitude")
-        ax.plot(y_harmonic)
-        st.pyplot(fig)
-        
-        st.write("Componente Percurssiva")
-        fig, ax = plt.subplots(figsize=(14, 4)) 
-        ax.set_xlabel("Time /s")
-        ax.set_ylabel("Amplitude")
-        ax.plot(y_percussive)
-        st.pyplot(fig)
-        #root mean square energy
-        
-        #zero-crossing rate
-        
-        
-        
-        st.subheader('Frequency domain')
-        
-        st.subheader('Time-frequency domain')
-
         #spectrogram
         st.write("Espetrograma")
         X = librosa.stft(y)
@@ -294,27 +263,61 @@ if my_file.is_file() and 'start' in st.session_state:
         img = librosa.display.specshow(Xdb, sr=fs, x_axis='time', y_axis='hz')
         plt.colorbar(img, ax= ax)
         st.pyplot(fig)
-        
-        #Spectral centroid
-        st.write("Spectral Centroid")
-        spectral_centroids = librosa.feature.spectral_centroid(y, sr=fs)[0]
-        fig, ax = plt.subplots(figsize=(14, 4)) 
-        frames = range(len(spectral_centroids))
-        t = librosa.frames_to_time(frames)
-        # Normalising the spectral centroid for visualisation
-        def normalize(y, axis=0):
-            return sklearn.preprocessing.minmax_scale(y, axis=axis)
-        #Plotting the Spectral Centroid along the waveform
-        librosa.display.waveshow(y, sr=fs, alpha=0.4)
-        ax.plot(t, normalize(spectral_centroids), color='b')
-        st.pyplot(fig)
     
-        #chromagram
-        chroma = librosa.feature.chroma_cqt(y=y, sr=fs)
-        fig, ax = plt.subplots()
-        img = librosa.display.specshow(chroma, y_axis='chroma', x_axis='time', ax=ax)
-        ax.set(title='Chromagram demonstration')
-        fig.colorbar(img, ax=ax)
+
+    if radio == "Features" and 'start' in st.session_state and 'data' in st.session_state:
+        y = st.session_state['data']['data'].to_numpy()
+        idx = (st.session_state['data']['data']).index[-1]
+        t = np.arange(0, idx/10, 0.1)
+        st.header("Feature extraction")
+        
+        st.subheader("Time domain")
+        
+        col1, col2 = st.columns([1,1])
+        with col1:
+            #amplitude envelope
+            yd = np.diff(y)
+            st.write("First Derivative")
+            fig, ax = plt.subplots(figsize=(10, 6)) 
+            ax.set_title("First Derivative", fontsize = 15)
+            ax.set_xlabel("Time /s")
+            ax.set_ylabel("Amplitude")
+            ax.plot(t, yd)
+            st.pyplot(fig)
+        
+        with col2:
+            st.write("Second Derivative")
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.set_title("Second Derivative", fontsize = 15)
+            ydd = np.diff(yd)
+            ax.set_xlabel("Time /s")
+            ax.set_ylabel("Amplitude")
+            t = np.arange(0, (idx-1)/10, 0.1)
+            ax.plot(t, ydd)
+            st.pyplot(fig)
+        
+
+        #find peak
+        st.write("Find signal peaks")
+        threshold = st.slider("Threshold", 0, 100, 80)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.set_title("Amplitude peaks in rms signal", fontsize = 15)
+        ax.set_xlabel("Time /s")
+        ax.set_ylabel("Amplitude")
+        peaks, _ = find_peaks(y, height= np.max(y) * (threshold/100))
+        t = np.arange(0, (idx+1)/10, 0.1)
+        ax.plot(t, y)
+        ax.plot(t[peaks], y[peaks], 'o')
+        st.pyplot(fig)
+
+        #histogram
+        st.write("Histogram")
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.set_title("Histogram plot", fontsize = 15)
+        ax.set_xlabel("Counts")
+        ax.set_ylabel("Bins")
+        counts, bins = np.histogram(y)
+        ax.stairs(counts,bins)
         st.pyplot(fig)
     
 else:
