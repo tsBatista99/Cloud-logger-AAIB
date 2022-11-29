@@ -9,7 +9,7 @@ O objetivo deste trabalho passou pela criação de um sistema "data logger" de �
 
 ### Diagrama da arquitetura do sistema
 
-![image](https://user-images.githubusercontent.com/117983623/204276316-af6eadbd-bcd9-42be-ae1d-844c0d0047f1.png)
+![image](https://user-images.githubusercontent.com/117983623/204655626-318ce1fc-f8ab-4fa3-8e32-65743d0d385a.png)
 
 A aquisição de aúdio proveniente do microfone é iniciada quando o utilizador clica no botão "Start" na página web. Quando isto acontece é publicada uma mensagem com valor "True" para o tópico "Status" que é recebida pelo cliente executado no computador, que por sua vez começa a publicar os dados do aúdio para o tópico "SoundSigAAIB".
 Os dados são depois recebidos pelo cliente em execução no gitpod e guardados sucessivamente num ficheiro .txt, a aplicação web no streamlit lê o último valor colocado neste ficheiro e constroí o gráfico de Sonograma do aúdio recolhido.
