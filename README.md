@@ -24,8 +24,8 @@ A aquisição de aúdio é terminada após ser pressionado o botão "Stop".
 
 ## Get Started
 
-Para começar é necessário criar um workspace no Gitpod com os ficheiros deste repositório. A instalação de todos os requisitos incluídos no ficheiro .gitpod.yml é feita automaticamente.
-Após terminada a instalação a página web é aberta numa nova janela e o subscriber.py encontra-se disponível para receber dados. O próximo passo é correr o ficheiro publisher.py no prompt do computador. 
+Para começar é necessário criar um workspace no Gitpod com os ficheiros deste repositório. A instalação de todos os requisitos incluídos no ficheiro .gitpod.yml é feita automaticamente.\n
+Após terminada a instalação, a página web é aberta numa nova janela e o subscriber.py encontra-se disponível para receber dados. O próximo passo é correr o ficheiro publisher.py no prompt do computador. 
 Completos todos estes passos, pode-se iniciar a aquisição de áudio clicando no botão "Start" da página web.
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/Cloud-logger-AAIB)
