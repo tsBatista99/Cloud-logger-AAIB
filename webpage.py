@@ -284,21 +284,25 @@ if my_file.is_file() and 'start' in st.session_state:
         
 
         #find peak
-        st.write("Find signal peaks")
-        threshold = st.slider("Threshold", 0, 100, 80)
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.set_title("Amplitude peaks in rms signal", fontsize = 15)
-        ax.set_xlabel("Time /s")
-        ax.set_ylabel("Amplitude")
-        peaks, _ = find_peaks(y, height= np.max(y) * (threshold/100))
-        t = np.arange(0, (idx+1)/10, 0.1)
-        ax.plot(t, y)
-        ax.plot(t[peaks], y[peaks], 'o')
-        st.pyplot(fig)
+        st.header("Find signal peaks")
         
-        is_checkp = st.checkbox("Peaks:")
-        if is_checkp:
-            st.write(y[peaks])
+        col1, col2 = st.columns([2,0.5])
+        with col1:
+            threshold = st.slider("Threshold", 0, 100, 80)
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.set_title("Amplitude peaks in rms signal", fontsize = 15)
+            ax.set_xlabel("Time /s")
+            ax.set_ylabel("Amplitude")
+            peaks, _ = find_peaks(y, height= np.max(y) * (threshold/100))
+            t = np.arange(0, (idx+1)/10, 0.1)
+            ax.plot(t, y)
+            ax.plot(t[peaks], y[peaks], 'o')
+            st.pyplot(fig)
+        
+        with col2:
+            is_checkp = st.checkbox("Peaks:")
+            if is_checkp:
+                st.write(y[peaks])
 
         #histogram
         st.write("Histogram")
