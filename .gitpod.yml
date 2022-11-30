@@ -47,8 +47,3 @@ ports:
     description: Computer Microphone data logger
     onOpen: open-browser
     visibility: public
-
-github:
-  prebuilds:
-    auto:
-    - false
