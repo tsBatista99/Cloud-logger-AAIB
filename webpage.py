@@ -181,7 +181,7 @@ if my_file.is_file() and 'start' in st.session_state:
         st.warning('The data of this session was deleted. Press RESET again to continue.', icon="⚠️")
     
     
-    radio = st.sidebar.radio("Choose method",("Real-time Plot", "Sonogram","Features"))
+    radio = st.sidebar.radio("Choose method",("Real-time Plot", "Sonogram","Characteristics"))
         
     
     
@@ -220,7 +220,7 @@ if my_file.is_file() and 'start' in st.session_state:
             
             kpi1, kpi2, kpi3 = st.columns(3)
 
-            # fill in those three columns with respective metrics or KPIs
+            
             kpi1.metric(
                 label="Maximum Power",
                 value=round(st.session_state['data'].max())
@@ -254,7 +254,7 @@ if my_file.is_file() and 'start' in st.session_state:
             
     
 
-    if radio == "Features" and 'start' in st.session_state and 'data' in st.session_state:
+    if radio == "Characteristics" and 'start' in st.session_state and 'data' in st.session_state:
         y = st.session_state['data']['data'].to_numpy()
         idx = (st.session_state['data']['data']).index[-1]
         t = np.arange(0, idx/10, 0.1)
@@ -297,6 +297,10 @@ if my_file.is_file() and 'start' in st.session_state:
         ax.plot(t, y)
         ax.plot(t[peaks], y[peaks], 'o')
         st.pyplot(fig)
+        
+        is_checkp = st.checkbox("Peaks:")
+        if is_checkp:
+            st.write(y[peaks])
 
         #histogram
         st.write("Histogram")
