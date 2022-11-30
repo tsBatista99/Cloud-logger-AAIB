@@ -6,8 +6,6 @@ import streamlit as st  # 🎈 data web app development
 import matplotlib.pyplot as plt
 from pathlib import Path
 from scipy.signal import butter, lfilter, find_peaks
-import math
-import sklearn
 from numpy.fft import fft
 
 import paho.mqtt.client as mqtt 
