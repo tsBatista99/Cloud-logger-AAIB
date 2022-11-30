@@ -97,7 +97,7 @@ def get_data():
 
 
 
-st.markdown("<h1 style='text-align: center; color: white; padding:20px'>SoundCloud</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: white; padding:20px'>SonoCloud</h1>", unsafe_allow_html=True)
 
 st.write('___')
       
@@ -181,7 +181,7 @@ if my_file.is_file() and 'start' in st.session_state:
         st.warning('The data of this session was deleted. Press RESET again to continue.', icon="⚠️")
     
     
-    radio = st.sidebar.radio("Choose method",("Real-time Plot", "Sonogram","Spectrogram","Features"))
+    radio = st.sidebar.radio("Choose method",("Real-time Plot", "Sonogram","Features"))
         
     
     
@@ -253,25 +253,13 @@ if my_file.is_file() and 'start' in st.session_state:
             st.write(st.session_state['data'].T)
             
     
-    if radio == "Spectrogram" and 'start' in st.session_state and 'data' in st.session_state:
-        y = st.session_state['data']['data'].to_numpy()
-        #spectrogram
-        st.write("Espetrograma")
-        X = librosa.stft(y)
-        Xdb = librosa.amplitude_to_db(abs(X))
-        fig, ax = plt.subplots(figsize=(14, 5))
-        img = librosa.display.specshow(Xdb, sr=fs, x_axis='time', y_axis='hz')
-        plt.colorbar(img, ax= ax)
-        st.pyplot(fig)
-    
 
     if radio == "Features" and 'start' in st.session_state and 'data' in st.session_state:
         y = st.session_state['data']['data'].to_numpy()
         idx = (st.session_state['data']['data']).index[-1]
         t = np.arange(0, idx/10, 0.1)
-        st.header("Feature extraction")
-        
-        st.subheader("Time domain")
+        st.header("Signal derivative")
+       
         
         col1, col2 = st.columns([1,1])
         with col1:
