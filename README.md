@@ -30,7 +30,7 @@ Após terminada a instalação, a página web é aberta numa nova janela e o sub
 
 Completos todos estes passos, pode-se iniciar a aquisição de áudio clicando no botão "Start" da página web.
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/Cloud-logger-AAIB)
+
 
 <!-- CONTACTOS -->
 ## Contactos
